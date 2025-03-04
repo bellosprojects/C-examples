@@ -91,6 +91,28 @@ char *str_to_char(string a){
     return aux;
 }
 
+// Función para convertir un string a mayúsculas
+string aMayusculas(string str) {
+  std::string resultado = str;
+  for (char &c : resultado) {
+    if (c >= 'a' && c <= 'z') {
+      c = c - ('a' - 'A');
+    }
+  }
+  return resultado;
+}
+
+// Función para convertir un string a minúsculas
+string aMinusculas(string str) {
+  string resultado = str;
+  for (char &c : resultado) {
+    if (c >= 'A' && c <= 'Z') {
+      c = c + ('a' - 'A'); // Convertir a minúscula
+    }
+  }
+  return resultado;
+}
+
 int main(){
 
     return 0;
