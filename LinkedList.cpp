@@ -6,52 +6,80 @@
 
 using namespace std;
 
-// Clase Nodo
+// Clase Nodo 
+template <typename T>
 class Node {
     public:
-        int data;
-        Node* next;
+        T data;
+        Node<T>* next;
 
         // Constructor
-        Node(int value) : data(value), next(nullptr) {}
+        Node(T value) : data(value), next(nullptr) {}
 };
 
 // Clase LinkedList
+template <typename T>
 class LinkedList {
     private:
-        Node *head, *tail;
-        
-    public:
-        //Tamano de la lista
+        Node<T> *head, *tail;
         int size;
+    
+    public:
+
+        //Tamano de la lista
+        int Size() {
+            return size;
+        }
 
         // Constructor
         LinkedList() : head(nullptr), tail(nullptr), size(0) {}
 
+        //Constructor de copia
+        LinkedList(const LinkedList<T>& other) : head(nullptr), tail(nullptr), size(0) {
+            Node<T>* current = other.head;
+            while(current != nullptr) {
+                add(current->data);
+                current = current->next;
+            }
+        }
+
+        //operador de asignacion
+        LinkedList<T>& operator=(const LinkedList<T>& other) {
+            if(this != &other) {
+                clear(); // Limpiar la lista actual
+                Node<T>* current = other.head;
+                while(current != nullptr) {
+                    add(current->data);
+                    current = current->next;
+                }
+            }
+            return *this;
+        }
+
         //Agregar elemento al final de la lista
-        void add(int value) {
+        void add(T value) {
             if(isEmpty()){
-                head = new Node(value);
+                head = new Node<T>(value);
                 tail = head;
             } else {
-                tail->next = new Node(value);
+                tail->next = new Node<T>(value);
                 tail = tail->next;
             }
             size++;
         }
 
         //Agregar en una posicion especifica (por defecto al inicio)
-        void insert(int value, int position=0) {
+        void insert(T value, int position=0) {
             if(position < 0 || position > size) {
                 cout << "Posicion fuera de rango." << endl;
                 return;
             }
-            Node* newNode = new Node(value);
+            Node<T>* newNode = new Node<T>(value);
             if(position == 0) {
                 newNode->next = head;
                 head = newNode;
             } else {
-                Node* current = head;
+                Node<T>* current = head;
                 for(int i = 0; i < position - 1; i++) {
                     current = current->next;
                 }
@@ -62,44 +90,25 @@ class LinkedList {
             size++;
         }
 
-        //Eliminar el ultimo elemento
-        void removeLast() {
-            if(isEmpty()) {
-                cout << "La lista esta vacia." << endl;
-                return;
-            }
-            if(size == 1) {
-                delete head;
-                head = tail = nullptr;
-            } else {
-                Node* current = head;
-                while(current->next != tail) {
-                    current = current->next;
-                }
-                delete tail;
-                tail = current;
-                tail->next = nullptr;
-            }
-            size--;
-        }
 
         //Eliminar por indice
         void pop(int index){
-            if(index < 0 || index >= size) {
+            if(index <0) index = size + index; // Soporte para indices negativos
+            if(index >= size) {
                 cout << "indice fuera de rango." << endl;
                 return;
             }
             if(index == 0) {
-                Node* temp = head;
+                Node<T>* temp = head;
                 head = head->next;
                 delete temp;
                 if(size == 1) tail = head;
             } else {
-                Node* current = head;
+                Node<T>* current = head;
                 for(int i = 0; i < index - 1; i++) {
                     current = current->next;
                 }
-                Node* temp = current->next;
+                Node<T>* temp = current->next;
                 current->next = temp->next;
                 delete temp;
                 if(current->next == nullptr) tail = current;
@@ -108,13 +117,13 @@ class LinkedList {
         }
 
         //Eliminar por valor (primera coincidencia)
-        void remove(int value) {
+        void remove(T value, bool allOccurrences = false) {
             if(isEmpty()) {
                 cout << "La lista esta vacia." << endl;
                 return;
             }
-            Node* current = head;
-            Node* previous = nullptr;
+            Node<T>* current = head;
+            Node<T>* previous = nullptr;
 
             while(current != nullptr) {
                 if(current->data == value) {
@@ -127,21 +136,26 @@ class LinkedList {
                     }
                     delete current;
                     size--;
-                    return; // Salir despues de eliminar el primer valor encontrado
+                    if(!allOccurrences) {
+                        return; // Si no se quieren eliminar todas las ocurrencias, salir
+                    }
                 }
                 previous = current;
                 current = current->next;
             }
-            cout << "Valor no encontrado en la lista." << endl;
+            if(allOccurrences && previous != nullptr) {
+                tail = previous; // Actualizar tail si se eliminaron todos los nodos
+            }
         }
 
         //Obtener valor por indice de la forma 'list[index]'
-        int operator[](int index){
-            if(index < 0 || index >= size) {
+        T operator[](int index){
+            if(index < 0) index = size + index; // Soporte para indices negativos
+            if(index >= size) {
                 cout << "indice fuera de rango." << endl;
                 return -1; // O un valor que indique error
             }
-            Node* current = head;
+            Node<T>* current = head;
             for(int i = 0; i < index; i++) {
                 current = current->next;
             }
@@ -149,12 +163,13 @@ class LinkedList {
         }
 
         //Obtener valor por indice de la forma list.get(index)
-        int get(int index){
-            if(index < 0 || index >= size) {
+        T get(int index){
+            if(index < 0) index = size + index; // Soporte para indices negativos
+            if(index >= size) {
                 cout << "indice fuera de rango." << endl;
                 return -1; // O un valor que indique error
             }
-            Node* current = head;
+            Node<T>* current = head;
             for(int i = 0; i < index; i++) {
                 current = current->next;
             }
@@ -162,9 +177,9 @@ class LinkedList {
         }
 
         //obtener cuantos elementos tiene el valor 'value'
-        int count(int value) {
+        int count(T value) {
             int count = 0;
-            Node* current = head;
+            Node<T>* current = head;
             while(current != nullptr) {
                 if(current->data == value) {
                     count++;
@@ -180,13 +195,13 @@ class LinkedList {
                 cout << "Rango invalido." << endl;
                 return;
             }
-            Node* current = head;
-            Node* newHead = nullptr;
-            Node* newTail = nullptr;
+            Node<T>* current = head;
+            Node<T>* newHead = nullptr;
+            Node<T>* newTail = nullptr;
             int index = 0;
             while(current != nullptr) {
                 if(index >= start && index <= end) {
-                    Node* newNode = new Node(current->data);
+                    Node<T>* newNode = new Node<T>(current->data);
                     if(newHead == nullptr) {
                         newHead = newNode;
                         newTail = newNode;
@@ -208,9 +223,9 @@ class LinkedList {
 
         //Voltear elementos
         void reverse() {
-            Node* prev = nullptr;
-            Node* current = head;
-            Node* next = nullptr;
+            Node<T>* prev = nullptr;
+            Node<T>* current = head;
+            Node<T>* next = nullptr;
             tail = head; // Actualizar tail al inicio antes de invertir
             while(current != nullptr) {
                 next = current->next; // Guardar el siguiente nodo
@@ -224,7 +239,7 @@ class LinkedList {
         //vaciar lista
         void clear() {
             while(!isEmpty()) {
-                removeLast();
+                pop(-1); // Eliminar el ultimo elemento
             }
             head = nullptr;
             tail = nullptr;
@@ -232,8 +247,8 @@ class LinkedList {
         }
 
         //indice de un valor
-        int indexOf(int value) {
-            Node* current = head;
+        int indexOf(T value) {
+            Node<T>* current = head;
             int index = 0;
             while(current != nullptr) {
                 if(current->data == value) {
@@ -255,9 +270,9 @@ class LinkedList {
             if(isEmpty()) {
                 return;
             }
-            Node* current = head;
+            Node<T>* current = head;
             while(current != nullptr) {
-                cout << current->data;
+                current->data.print();
                 if(current->next != nullptr) {
                     cout << sep;
                 }
@@ -271,7 +286,7 @@ class LinkedList {
             if (isEmpty()) {
                 return;
             }
-            Node* current = head;
+            Node<T>* current = head;
             bool swapped;
             do {
                 swapped = false;
@@ -289,6 +304,22 @@ class LinkedList {
             } while (swapped);
         }
 
+        Node<T> *getHead(){
+            return head;
+        }
+
+        void setHead(Node<T>* newHead){
+            head = newHead;
+        }
+
+        Node<T> *getTail(){
+            return tail;
+        }
+
+        void setTail(Node<T>* newTail){
+            tail = newTail;
+        }
+
         //Destructor
         ~LinkedList() {
             clear();
@@ -296,95 +327,3 @@ class LinkedList {
             tail = nullptr;
         }
 };
-
-int main() {
-    
-    //Muestra de uso
-    LinkedList list; // Crear una lista enlazada
-
-    // Agregar elementos
-    list.add(5);
-    list.add(67);
-    list.add(2);
-    list.add(7);
-    list.add(23);
-    list.add(8);
-    list.add(1);
-    list.add(8);
-    list.add(9);
-
-    // Imprimir la lista
-    cout << "Lista original: ";
-    list.print();
-
-    // Insertar en una posicion especifica
-    list.insert(3, 2);
-    cout << "Lista despues de insertar 3 en la posicion 2: ";
-    list.print();
-
-    //Agregar al inicio
-    list.insert(0);
-
-    cout << "Lista despues de insertar 0 al inicio: ";
-    list.print();
-
-    // Eliminar el ultimo elemento
-    list.removeLast();
-    cout << "Lista despues de eliminar el ultimo elemento: ";
-    list.print();
-
-    // Eliminar por indice
-    list.pop(2);
-    cout << "Lista despues de eliminar el elemento en el indice 2: ";
-    list.print();
-
-    // Eliminar por valor
-    list.remove(5);
-    cout << "Lista despues de eliminar el valor 5: ";
-    list.print();
-
-    // Obtener valor por indice
-    cout << "Valor en el indice 1: " << list[1] << endl;
-
-    // Obtener valor por metodo get
-    cout << "Valor en el indice 1 usando get: " << list.get(1) << endl;
-
-    // Contar ocurrencias de un valor
-    cout << "Numero de ocurrencias del valor 8: " << list.count(8) << endl;
-
-    // Acotar la lista a un rango
-    list.slice(1, 4);
-    cout << "Lista despues de acotar a los indices 1 a 4: ";
-    list.print();
-
-    // Voltear la lista
-    list.reverse();
-    cout << "Lista despues de voltear: ";
-    list.print();
-
-    // Verificar si la lista esta vacia
-    cout << "La lista esta vacia? " << (list.isEmpty() ? "Si" : "No") << endl;
-
-    // Obtener el indice de un valor
-    cout << "indice del valor 7: " << list.indexOf(7) << endl;
-
-    // Ordenar la lista de mayor a menor
-    list.sort();
-    cout << "Lista despues de ordenar de mayor a menor: ";
-    list.print();
-
-    // Vaciar la lista
-    list.clear();
-
-    // Tamano de la lista
-    cout << "Tamano de la lista despues de vaciar: " << list.size << endl; //0 por estar vacia
-
-    // Imprimir la lista vacia
-    cout << "Lista vacia: ";
-    list.print(); // No deberia imprimir nada
-
-    // Verificar si la lista esta vacia
-    cout << "La lista esta vacia? " << (list.isEmpty() ? "Si" : "No") << endl;
-
-    return 0;
-}
